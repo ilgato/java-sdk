@@ -33,6 +33,7 @@ import org.mockserver.model.Header;
 import com.google.gson.Gson;
 import com.ibm.watson.developer_cloud.WatsonServiceUnitTest;
 import com.ibm.watson.developer_cloud.http.HttpMediaType;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechAlternative;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechModel;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechResults;
@@ -106,6 +107,23 @@ public class SpeechToTextTest extends WatsonServiceUnitTest {
     service.deleteSession(null).execute();
   }
 
+
+  /**
+   * Test PCM without rate
+   */
+  @Test(expected = IllegalArgumentException.class)
+  public void testPcmWithoutRate() {
+    new RecognizeOptions.Builder().contentType(HttpMediaType.AUDIO_RAW).build();
+  }
+  
+  /**
+   * Test PCM with rate
+   */
+  @Test
+  public void testPcmWithRate() {
+    new RecognizeOptions.Builder().contentType(HttpMediaType.AUDIO_RAW + "; rate=44000").build();
+  }
+  
   /**
    * Test get model.
    */

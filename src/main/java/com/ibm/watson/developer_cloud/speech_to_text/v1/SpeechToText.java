@@ -24,6 +24,7 @@ import com.ibm.watson.developer_cloud.http.ResponseConverter;
 import com.ibm.watson.developer_cloud.http.ServiceCall;
 import com.ibm.watson.developer_cloud.http.ServiceCallback;
 import com.ibm.watson.developer_cloud.service.WatsonService;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechModel;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechResults;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechSession;
@@ -35,7 +36,9 @@ import com.ibm.watson.developer_cloud.util.GsonSingleton;
 import com.ibm.watson.developer_cloud.util.ResponseConverterUtils;
 import com.ibm.watson.developer_cloud.util.Validator;
 
+import okhttp3.MediaType;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.ws.WebSocket;
 
 /**
@@ -280,7 +283,7 @@ public class SpeechToText extends WatsonService {
 
     final RequestBuilder requestBuilder = RequestBuilder.post(path);
     buildRecognizeRequest(requestBuilder, options);
-    requestBuilder.body(okhttp3.RequestBody.create(okhttp3.MediaType.parse(contentType), audio));
+    requestBuilder.body(RequestBody.create(MediaType.parse(contentType), audio));
     return createServiceCall(requestBuilder.build(), ResponseConverterUtils.getObject(SpeechResults.class));
   }
 
@@ -324,7 +327,7 @@ public class SpeechToText extends WatsonService {
     getToken().enqueue(new ServiceCallback<String>() {
       @Override
       public void onFailure(Exception e) {
-        throw new RuntimeException(e);
+        callback.onError(e);
       }
 
       @Override

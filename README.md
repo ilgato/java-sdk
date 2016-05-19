@@ -1,9 +1,10 @@
+
 # Watson Developer Cloud Java SDK
 [![Build Status](https://travis-ci.org/watson-developer-cloud/java-sdk.svg?branch=master)](https://travis-ci.org/watson-developer-cloud/java-sdk)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.ibm.watson.developer_cloud/java-sdk/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.ibm.watson.developer_cloud/java-sdk)
 [![codecov.io](https://codecov.io/github/watson-developer-cloud/java-sdk/coverage.svg?branch=master)](https://codecov.io/github/watson-developer-cloud/java-sdk?branch=master)
 [![CLA assistant](https://cla-assistant.io/readme/badge/watson-developer-cloud/java-sdk)](https://cla-assistant.io/watson-developer-cloud/java-sdk)
-
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1fdb12900d5845459033784aba3a7300)](https://www.codacy.com/app/gattana/java-sdk?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=watson-developer-cloud/java-sdk&amp;utm_campaign=Badge_Grade)
 
 Java client library to use the [Watson Developer Cloud][wdc] services, a collection of REST
 APIs and SDKs that use cognitive computing to solve complex problems.
@@ -22,6 +23,7 @@ APIs and SDKs that use cognitive computing to solve complex problems.
     * [Alchemy Vision](#alchemy-vision)
     * [Alchemy Data News](#alchemy-data-news)
     * [Concept Insights](#concept-insights)
+    * [Conversation](#conversation)
     * [Dialog](#dialog)
     * [Document Conversion](#document-conversion)
     * [Language Translation](#language-translation)
@@ -207,6 +209,22 @@ DocumentsResult result = service.getNewsDocuments(params).execute();
 System.out.println(result);
 ```
 
+### Conversation
+Use the experimental [Conversation][conversation] service to identify intents, entities, and conduct conversations.
+
+```java
+ConversationService service = new ConversationService(ConversationService.VERSION_DATE_2016_05_19);
+service.setUsernameAndPassword("<username>", "<password>");
+
+ConversationOptions options = new ConversationOptions.Builder()
+  .workspaceId("<your-workspace-id>") // Created with the tooling app
+  .inputText("What is my account balance?")
+  .build();
+
+Message messageResponse = service.message(options).execute();
+System.out.println(messageResponse);
+```
+
 ### Concept Insights
 Use the [Concept Insights][concept_insights] service to identify words in the text that
 correspond to concepts in a Wikipedia graph.
@@ -379,8 +397,11 @@ service.setUsernameAndPassword("<username>", "<password>");
 
 File audio = new File("src/test/resources/sample1.wav");
 
-RecognizeOptions options = new RecognizeOptions();
-  options.continuous(true).interimResults(true).contentType(HttpMediaType.AUDIO_WAV);
+RecognizeOptions options = new RecognizeOptions.Builder()
+  .continuous(true)
+  .interimResults(true)
+  .contentType(HttpMediaType.AUDIO_WAV)
+  .build();
 
   service.recognizeUsingWebSocket(audio, options, new BaseRecognizeCallback() {
     @Override
@@ -407,7 +428,7 @@ System.out.println(voices);
 Use the [Tone Analyzer][tone_analyzer] service to get the tone of your email.
 
 ```java
-ToneAnalyzer service = new ToneAnalyzer(ToneAnalyzer.VERSION_DATE_2016_02_11);
+ToneAnalyzer service = new ToneAnalyzer(ToneAnalyzer.VERSION_DATE_2016_05_19);
 service.setUsernameAndPassword("<username>", "<password>");
 
 String text =
@@ -423,7 +444,7 @@ String text =
       + "business outcomes. Economy has nothing to do with it.";
 
 // Call the service and get the tone
-ToneAnalysis tone = service.getTone(text).execute();
+ToneAnalysis tone = service.getTone(text, null).execute();
 System.out.println(tone);
 ```
 
@@ -497,12 +518,14 @@ following picture.
 ![Car](https://visual-recognition-demo.mybluemix.net/images/samples/5.jpg)
 
 ```java
-VisualRecognition service = new VisualRecognition(VisualRecognition.VERSION_DATE_2015_12_02);
+VisualRecognition service = new VisualRecognition(VisualRecognition.VERSION_DATE_2016_05_19);
 service.setUsernameAndPassword("<username>", "<password>");
 
-File image = new File("src/test/resources/visual_recognition/car.png");
-
-VisualClassification result = service.classify(image).execute();
+System.out.println("Classify an image");
+ClassifyImagesOptions options = new ClassifyImagesOptions.Builder()
+    .images(new File("src/test/resources/visual_recognition/car.png"))
+    .build();
+VisualClassification result = service.classify(options).execute();
 System.out.println(result);
 ```
 
@@ -570,8 +593,6 @@ available in [LICENSE](LICENSE).
 See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 [personality_insights]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/personality-insights/
-[language_identification]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/lidapi/
-[machine_translation]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/mtapi/
 [document_conversion]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/document-conversion/
 [relationship_extraction]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/sireapi/
 [language_translation]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/language-translation/
@@ -582,9 +603,9 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 [tone_analyzer]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/tone-analyzer/
 [dialog]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/dialog/
 [concept_insights]: https://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/concept-insights/
+[conversation]: https://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/conversation/
 [visual_insights]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/visual-insights/
 [retrieve_and_rank]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/retrieve-rank/
-[concept_expansion]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/doc/concept-expansion/
 
 [alchemy_language]: http://www.alchemyapi.com/products/alchemylanguage
 [sentiment_analysis]: http://www.alchemyapi.com/products/alchemylanguage/sentiment-analysis
@@ -597,6 +618,5 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 [OkHttp]: http://square.github.io/okhttp/
 [gson]: https://github.com/google/gson
 [apache_maven]: http://maven.apache.org/
-[releases]: https://github.com/watson-developer-cloud/java-sdk/releases
 
 [jar]: https://github.com/watson-developer-cloud/java-sdk/releases/download/java-sdk-3.0.0-RC1/java-sdk-3.0.0-RC1-jar-with-dependencies.jar

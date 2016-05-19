@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -35,8 +36,9 @@ import com.ibm.watson.developer_cloud.retrieve_and_rank.v1.model.Rankers;
 import com.ibm.watson.developer_cloud.retrieve_and_rank.v1.model.Ranking;
 import com.ibm.watson.developer_cloud.retrieve_and_rank.v1.model.SolrCluster;
 import com.ibm.watson.developer_cloud.retrieve_and_rank.v1.model.SolrCluster.Status;
-import com.ibm.watson.developer_cloud.service.exception.BadRequestException;
 import com.ibm.watson.developer_cloud.retrieve_and_rank.v1.model.SolrClusterOptions;
+import com.ibm.watson.developer_cloud.retrieve_and_rank.v1.model.SolrClusterStats;
+import com.ibm.watson.developer_cloud.service.exception.BadRequestException;
 
 /**
  * The Class RetrieveAndRankIT.
@@ -76,13 +78,26 @@ public class RetrieveAndRankIT extends WatsonServiceTest {
   }
 
   /**
+   * Test delete all rankers.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void testDeleteAllRankers() {
+    List<Ranker> rankers = service.getRankers().execute().getRankers();
+    for (Ranker ranker : rankers) {
+      if (!ranker.getName().equals(rankerId))
+        service.deleteRanker(ranker.getId()).execute();
+    }
+  }
+  /**
    * Test create ranker and rank results.
    *
    * @throws InterruptedException the interrupted exception
+   * @throws IOException
    */
   @Test
-  @Ignore
-  public void testCreateRankerAndRankResults() throws InterruptedException {
+  public void testCreateRankerAndRankResults() throws InterruptedException, IOException {
     final File trainingFile = new File(RESOURCE_PATH + "ranker_train.csv");
     final File testFile = new File(RESOURCE_PATH + "ranker_test.csv");
     final int numToRank = 5;
@@ -90,16 +105,24 @@ public class RetrieveAndRankIT extends WatsonServiceTest {
     final Ranker ranker = service.createRanker(RANKER_NAME, trainingFile).execute();
     try {
       assertEquals(RANKER_NAME, ranker.getName());
-      for (int x = 0; x < 20
-          && service.getRankerStatus(ranker.getId()).execute().getStatus() != Ranker.Status.AVAILABLE; x++) {
+      for (int x = 0; x < 20 && service.getRankerStatus(ranker.getId()).execute()
+          .getStatus() != Ranker.Status.AVAILABLE; x++) {
         Thread.sleep(10000);
       }
       assertEquals(Ranker.Status.AVAILABLE, service.getRankerStatus(ranker.getId()).execute().getStatus());
 
-      final Ranking ranking = service.rank(ranker.getId(), testFile, numToRank).execute();
+      Ranking ranking = service.rank(ranker.getId(), testFile, numToRank).execute();
       assertTrue(!ranking.getAnswers().isEmpty());
+
+      final FileInputStream testInputStream = new FileInputStream(testFile);
+      try {
+        ranking = service.rank(ranker.getId(), testInputStream, numToRank).execute();
+        assertTrue(!ranking.getAnswers().isEmpty());
+      } finally {
+        testInputStream.close();
+      }
     } finally {
-      service.deleteRanker(ranker.getId());
+      //service.deleteRanker(ranker.getId());
     }
 
   }
@@ -225,6 +248,17 @@ public class RetrieveAndRankIT extends WatsonServiceTest {
     final List<SolrCluster> clusters = service.getSolrClusters().execute().getSolrClusters();
     assertNotNull(clusters);
     assertTrue(!clusters.isEmpty());
+  }
+
+  /**
+   * Test getting a Solr cluster's stats.
+   */
+  @Test
+  public void testGetSolrClusterStats() {
+    final SolrClusterStats stats = service.getSolrClusterStats(clusterId).execute();
+    assertNotNull(stats);
+    assertTrue(stats.getDiskUsage().getUsedBytes() > 0);
+    assertTrue(stats.getMemoryUsage().getUsedBytes() > 0);
   }
 
   /**
